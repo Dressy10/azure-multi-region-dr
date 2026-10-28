@@ -1,4 +1,4 @@
-# ADR 0001: Warm standby across a region pair
+# ADR 0001: Warm standby across two regions
 
 Status: accepted
 
@@ -13,9 +13,9 @@ The goal is a credible disaster recovery design that does not carry a large idle
 | Active-active | near zero | highest, and hardest to get right |
 
 ## Decision
-Warm standby. Data is replicated continuously. Compute is deployed in both regions, and the DR region's Container App scales to zero until needed, so it is warm without costing much. Targets: RTO 5 minutes or less, RPO under 1 minute.
+Warm standby. Data is replicated continuously. Compute is deployed in both regions, and the DR region's Container App is configured to scale to zero (Front Door's health probes keep it warm, see ADR 0003), so it is warm without costing much. Targets: RTO 5 minutes or less, RPO under 1 minute.
 
-Regions are UK South (primary) and UK West (DR), an Azure region pair, so platform maintenance is sequenced across them and both sit inside the existing allowed-regions policy.
+Regions: UK South (primary) and a DR region. This ADR originally chose UK West, UK South's Azure pair, so that platform maintenance is sequenced across the two. That choice was superseded by ADR 0004, which moved the DR region to North Europe because Cosmos DB capacity in UK West is not available to this subscription.
 
 ## Rejected
 - Backup and restore: RTO in hours cannot be honestly called disaster recovery for a payments-style service.

@@ -1,13 +1,13 @@
 # Multi-region disaster recovery on Azure, built to be destroyed
 
-A warm-standby DR design across two paired Azure regions that is **fully created by `terraform apply` and fully removed by `terraform destroy`**. Disaster recovery is usually expensive because a second region sits idle all year. Here the whole stack is disposable: you stand it up, run a failover drill, record the measured RPO and RTO, and destroy it. Only a tiny bootstrap (Terraform state and CI identities) stays.
+A warm-standby DR design across two Azure regions that is **fully created by `terraform apply` and fully removed by `terraform destroy`**. Disaster recovery is usually expensive because a second region sits idle all year. Here the whole stack is disposable: you stand it up, run a failover drill, record the measured RPO and RTO, and destroy it. Only a tiny bootstrap (Terraform state and CI identities) stays.
 
 ## Status
 
 | Phase | Scope | State |
 |---|---|---|
 | 0 | Repo, design, ADRs, bootstrap (state + OIDC identities), CI checks | done and applied, except the approval gate (see note) |
-| 1 | Two-region stack: Cosmos DB, Container Apps, Front Door, monitoring | written and planned (18 resources), not yet applied |
+| 1 | Two-region stack: Cosmos DB, Container Apps, Front Door, monitoring | applied twice, blocked: Cosmos DB multi-region capacity refused in UK West and North Europe (see ADR 0004). Stack destroyed; data layer decision open |
 | 2 | Sample payments-style service that writes through the stack | not started |
 | 3 | Automated failover and failback drills with measured RPO and RTO | not started |
 | 4 | Cost proof: priced run, idle cost, destroy/recreate timings, runbooks, postmortem | not started |
@@ -23,7 +23,7 @@ No results are claimed yet. Every number below is a target or an estimate, and w
                    |
           Azure Front Door (priority routing, health probes)
               /                         \
-   UK South (primary)             UK West (DR, warm standby)
+   UK South (primary)             North Europe (DR, warm standby)
    Container Apps (min 1)         Container Apps (min 0, kept warm by probes)
           \                         /
         Cosmos DB, two regions, automatic failover
@@ -31,7 +31,7 @@ No results are claimed yet. Every number below is a target or an estimate, and w
         Log Analytics, daily ingestion cap
 ```
 
-- **Regions:** UK South (primary) and UK West (DR), an Azure region pair. Both are already in the allowed-regions policy of my landing zone.
+- **Regions:** UK South (primary). The DR region is currently undecided. UK West (UK South's Azure pair) was the first choice and North Europe the second, and Cosmos DB refused to add either to my subscription for lack of granted capacity (ADR 0004). The Terraform default is North Europe, but it will not apply until the data layer is resolved. It is also outside the allowed-regions list of my landing-zone policy (audit-only).
 - **Traffic:** Azure Front Door Standard with priority routing and HTTP health probes. Failover is at connection level, so measured RTO depends mainly on probe settings.
 - **Compute:** Container Apps in both regions. The primary keeps one replica; the DR app is configured to scale to zero but Front Door's health probes keep it warm, so its idle cost is small, not zero.
 - **Data:** one Cosmos DB account replicated to both regions with automatic failover. Failover is service-managed and can be triggered on demand for drills.

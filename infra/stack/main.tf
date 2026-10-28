@@ -2,7 +2,7 @@
 # `terraform apply`. State lives in the bootstrap storage account (key stack.tfstate), never here.
 #
 #   Front Door (global) -> priority 1: UK South Container App   (primary)
-#                       -> priority 2: UK West  Container App   (DR, warm standby)
+#                       -> priority 2: North Europe Container App (DR, warm standby)
 #   Cosmos DB account replicated to both regions with automatic failover.
 
 terraform {
@@ -25,8 +25,9 @@ variable "primary_location" {
   default = "uksouth"
 }
 variable "dr_location" {
-  type    = string
-  default = "ukwest"
+  description = "DR region. UK West was the first choice but Cosmos DB capacity there is not granted to this subscription (see ADR 0004)."
+  type        = string
+  default     = "northeurope"
 }
 variable "app_image" {
   description = "Stand-in workload for Phase 1: a public, signed image with /healthz and /version. Phase 2 replaces it with a DR-aware service."
@@ -91,6 +92,12 @@ resource "azurerm_container_app_environment" "region" {
   resource_group_name        = azurerm_resource_group.region[each.key].name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.region[each.key].id
   tags                       = var.tags
+
+  # Azure adds a default "Consumption" workload profile that the config does not declare. Without
+  # this, every plan tries to strip it, which would touch the live primary region for no reason.
+  lifecycle {
+    ignore_changes = [workload_profile]
+  }
 }
 
 resource "azurerm_container_app" "region" {
@@ -100,6 +107,10 @@ resource "azurerm_container_app" "region" {
   container_app_environment_id = azurerm_container_app_environment.region[each.key].id
   revision_mode                = "Single"
   tags                         = var.tags
+
+  lifecycle {
+    ignore_changes = [workload_profile_name] # same default-profile noise as the environment
+  }
 
   template {
     min_replicas = each.value.min_replicas
