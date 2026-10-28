@@ -7,7 +7,7 @@ A warm-standby DR design across two paired Azure regions that is **fully created
 | Phase | Scope | State |
 |---|---|---|
 | 0 | Repo, design, ADRs, bootstrap (state + OIDC identities), CI checks | done and applied, except the approval gate (see note) |
-| 1 | Two-region stack: Cosmos DB, Container Apps, Traffic Manager, monitoring | not started |
+| 1 | Two-region stack: Cosmos DB, Container Apps, Front Door, monitoring | written and planned (18 resources), not yet applied |
 | 2 | Sample payments-style service that writes through the stack | not started |
 | 3 | Automated failover and failback drills with measured RPO and RTO | not started |
 | 4 | Cost proof: priced run, idle cost, destroy/recreate timings, runbooks, postmortem | not started |
@@ -21,10 +21,10 @@ No results are claimed yet. Every number below is a target or an estimate, and w
 ```
                  users
                    |
-          Traffic Manager (DNS, priority routing, health probes)
+          Azure Front Door (priority routing, health probes)
               /                         \
    UK South (primary)             UK West (DR, warm standby)
-   Container Apps (min 1)         Container Apps (scale to zero)
+   Container Apps (min 1)         Container Apps (min 0, kept warm by probes)
           \                         /
         Cosmos DB, two regions, automatic failover
                    |
@@ -32,19 +32,19 @@ No results are claimed yet. Every number below is a target or an estimate, and w
 ```
 
 - **Regions:** UK South (primary) and UK West (DR), an Azure region pair. Both are already in the allowed-regions policy of my landing zone.
-- **Traffic:** Traffic Manager with priority routing and HTTP health probes. DNS-based, so failover time is bounded by probe interval plus DNS TTL.
-- **Compute:** Container Apps in both regions, scale to zero. Idle cost is close to nothing.
+- **Traffic:** Azure Front Door Standard with priority routing and HTTP health probes. Failover is at connection level, so measured RTO depends mainly on probe settings.
+- **Compute:** Container Apps in both regions. The primary keeps one replica; the DR app is configured to scale to zero but Front Door's health probes keep it warm, so its idle cost is small, not zero.
 - **Data:** one Cosmos DB account replicated to both regions with automatic failover. Failover is service-managed and can be triggered on demand for drills.
 - **No secrets:** workloads use managed identity, and CI uses OIDC. Nothing long-lived is stored.
 
-Rejected alternatives and reasons are in `docs/adr/`.
+Rejected alternatives and reasons are in `docs/adr/`. ADR 0003 records a design change: Traffic Manager was the first choice and was replaced by Front Door.
 
 ## What "built to be destroyed" means
 
 | Survives `terraform destroy` | Destroyed |
 |---|---|
 | Terraform state (GRS storage account, versioned) | both regional stacks |
-| GitHub OIDC identities and role assignments | Cosmos DB, Container Apps, Traffic Manager |
+| GitHub OIDC identities and role assignments | Cosmos DB, Container Apps, Front Door |
 | This repo, ADRs, runbooks, drill results | monitoring workspaces |
 
 Recreating is one command from the pipeline or a laptop. Nothing is configured by hand, so there is nothing to lose.
@@ -56,12 +56,12 @@ These are my own estimates from list prices, not billed amounts, and must be che
 | Item | Idle (stack destroyed) | Drill (stack up) |
 |---|---|---|
 | Bootstrap: state storage | cents per month | same |
-| Cosmos DB, 400 RU/s in two regions | 0 | roughly $0.07 per hour |
-| Container Apps | 0 | near 0 (scale to zero; free monthly grant) |
-| Traffic Manager | 0 | cents |
+| Cosmos DB, 400 RU/s in two regions | 0 | roughly $0.065 per hour |
+| Front Door Standard | 0 | roughly $0.05 per hour (about $35 per month base fee, billed only while it exists) |
+| Container Apps | 0 | cents (the DR app is kept warm by Front Door health probes) |
 | Log Analytics (capped) | 0 | cents |
 
-If left running all month the stack would cost on the order of $50. A two-hour drill should cost well under $1. The project will report the real figure from the bill.
+If left running all month the stack would cost on the order of $85 (about $0.12 per hour). A two-hour drill should cost well under $1. The project will report the real figure from the bill.
 
 ## Targets (not yet measured)
 
@@ -74,6 +74,8 @@ If left running all month the stack would cost on the order of $50. A two-hour d
 ## Layout
 
 - `infra/bootstrap/`: state storage and OIDC identities, applied once by hand
+- `infra/stack/`: the disposable two-region stack
+- `scripts/up.ps1`, `scripts/down.ps1`: create the stack and time it; destroy it and verify it is gone
 - `docs/adr/`: architecture decision records
 
 ## Bootstrap

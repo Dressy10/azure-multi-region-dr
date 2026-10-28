@@ -9,7 +9,7 @@ A DR environment that runs 24/7 is the main reason small teams skip DR. The aim 
 - Everything that costs money lives in a Terraform root module (`infra/stack`) with no manual steps, so `terraform destroy` removes it and `terraform apply` recreates it.
 - Anything that must outlive a destroy lives in a separate bootstrap (`infra/bootstrap`): the Terraform state account and the CI identities. The state account is GRS so state survives a regional outage as well.
 - Stack state is stored in the bootstrap's storage account under its own key, never inside the stack's own resource groups.
-- Names that must be globally unique (for example the Traffic Manager DNS name and the Cosmos account) are derived deterministically from the subscription, so a recreated stack gets the same endpoints.
+- Names that must be globally unique (for example the Front Door endpoint name and the Cosmos account) are derived deterministically from the subscription, so a recreated stack gets the same endpoints.
 - A destroy is only considered successful if the stack's resource groups are gone, which the pipeline verifies.
 
 ## Rejected
