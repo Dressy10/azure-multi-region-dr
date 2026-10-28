@@ -6,11 +6,13 @@ A warm-standby DR design across two paired Azure regions that is **fully created
 
 | Phase | Scope | State |
 |---|---|---|
-| 0 | Repo, design, ADRs, bootstrap (state + OIDC identities), CI checks | in progress |
+| 0 | Repo, design, ADRs, bootstrap (state + OIDC identities), CI checks | done and applied, except the approval gate (see note) |
 | 1 | Two-region stack: Cosmos DB, Container Apps, Traffic Manager, monitoring | not started |
 | 2 | Sample payments-style service that writes through the stack | not started |
 | 3 | Automated failover and failback drills with measured RPO and RTO | not started |
 | 4 | Cost proof: priced run, idle cost, destroy/recreate timings, runbooks, postmortem | not started |
+
+Approval gate: the `apply` identity is trusted only for a GitHub environment called `production`, which should require a manual reviewer. GitHub does not allow required reviewers on private repositories on the current plan, so that gate is not in place yet. Nothing uses the `apply` identity until a deploy workflow exists, and the gate must be in place before one does (either by making the repo public, where reviewers are free, or by upgrading the plan).
 
 No results are claimed yet. Every number below is a target or an estimate, and will be replaced by measurements.
 
