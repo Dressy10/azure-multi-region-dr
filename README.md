@@ -8,7 +8,7 @@ A warm-standby DR design across two Azure regions that is **fully created by `te
 |---|---|---|
 | 0 | Repo, design, ADRs, bootstrap (state + OIDC identities), CI checks | done and applied, except the approval gate (see note) |
 | 1 | Two-region stack: Cosmos DB, Container Apps, Front Door, monitoring | done and verified once (UK South primary, France Central DR; UK West and North Europe were refused, see ADR 0004) |
-| 2 | Sample payments-style service that writes through the stack | not started |
+| 2 | Sample payments-style service that writes through the stack | partly done: a DR-aware, idempotent ledger store on the official SDK (4 unit tests) and an SDK drill client are built and were run against the live Cosmos account. Not yet deployed as a container behind Front Door |
 | 3 | Automated failover and failback drills with measured RPO and RTO | done once for traffic and data (planned failover only); unplanned RPO not measured. See `docs/drills/` |
 | 4 | Cost proof: priced run, idle cost, destroy/recreate timings, runbooks, postmortem | not started |
 
@@ -76,6 +76,10 @@ If left running all month the stack would cost on the order of $85 (about $0.12 
 | Traffic failback | 45.8 s after the primary came back, zero failed requests |
 | Cosmos planned failover, data written continuously | 296 acknowledged writes, 0 lost, 0 of the 199 rejected writes stored |
 | Cosmos write outage for a client without SDK region discovery | about 77 s (failover) and 82 s (failback), HTTP 403 sub-status 3; failover command itself about 70 s |
+| Same planned failover with the official SDK | 0 failed writes, 790 of 790 stored; one stalled write of 6.0 s (failover) and one of 7.1 s (failback) |
+| Simulated unplanned outage, Session consistency | all writes acknowledged, **764 of 918 missing from the surviving region**; write region switched after 43 s but the client kept writing to the cut-off region |
+| Simulated unplanned outage, Strong consistency | 0 acknowledged writes lost, but writes blocked for about 4.1 to 4.6 min (two writes hung 123 s each and failed with 503) |
+| Chosen consistency | Strong (ADR 0005), caveats recorded there |
 | Full destroy and verify | 2,186 s (about 36 min) for all 18 resources, then every stack resource group confirmed gone. Destroy is much slower than create (8 min), so cost savings depend on starting teardown promptly |
 
 So the stack is created in about 8 minutes but is not reachable through Front Door for roughly 18 more. A recreate from nothing takes about 26 minutes before traffic flows.
@@ -85,8 +89,10 @@ So the stack is created in about 8 minutes but is not reachable through Front Do
 | Objective | Target | Measured so far |
 |---|---|---|
 | RTO, traffic (failure to traffic served from DR) | 5 minutes or less | about 20 s for a simulated application outage in the primary region (not a whole-region failure) |
-| RTO, data writes | 5 minutes or less | about 77 to 82 s of failed writes for a naive client; expected lower with the official SDK, not yet measured |
-| RPO | under 1 minute for acknowledged writes | zero acknowledged writes lost in a PLANNED failover; unplanned regional RPO not measured |
+| RTO, data writes, planned failover | 5 minutes or less | official SDK: 0 failed writes, one write stalled 6.0 s (failover) and 7.1 s (failback). A naive REST client had about 77 to 82 s of failed writes |
+| RTO, data writes, simulated unplanned outage | 5 minutes or less | Session: no visible outage (but see RPO). Strong: no write succeeded for about 4.1 to 4.6 min, then it recovered by itself: only just inside the target |
+| RPO, planned failover | under 1 minute for acknowledged writes | 0 acknowledged writes lost (790 of 790 stored) |
+| RPO, simulated unplanned outage | under 1 minute for acknowledged writes | **Session: 764 of 918 acknowledged writes lost over 164 s, with no error ever shown to the client. Strong: 0 lost.** Region cut off from replication, not a dead region; see the limits in `docs/drills/` |
 | Recreate from nothing | to be measured | about 8 min to apply, then about 18 min before Front Door serves (about 26 min) |
 
 ## Layout
@@ -94,7 +100,8 @@ So the stack is created in about 8 minutes but is not reachable through Front Do
 - `infra/bootstrap/`: state storage and OIDC identities, applied once by hand
 - `infra/stack/`: the disposable two-region stack
 - `scripts/up.ps1`, `scripts/down.ps1`: create the stack and time it; destroy it and verify it is gone
-- `scripts/drill-traffic.ps1`, `scripts/drill-cosmos.ps1`: the failover drills, with client-side measurement
+- `scripts/drill-traffic.ps1`, `scripts/drill-cosmos.ps1`: the failover drills, with client-side measurement (`-Writer naive|sdk`, `-Scenario planned|unplanned`)
+- `app/ledger_dr/`: the idempotent, region-aware ledger store and its unit tests
 - `docs/drills/`, `docs/runbooks/`, `docs/metrics/`: drill write-ups, the failover runbook, and raw logs
 - `docs/adr/`: architecture decision records
 

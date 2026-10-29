@@ -1,0 +1,102 @@
+[
+    {
+        "T":  1793270827672,
+        "WriteRegion":  "UK South",
+        "Regions":  "UK South:Updating,France Central:Succeeded"
+    },
+    {
+        "T":  1793270835730,
+        "WriteRegion":  "UK South",
+        "Regions":  "UK South:Offline,France Central:Succeeded"
+    },
+    {
+        "T":  1793270843474,
+        "WriteRegion":  "UK South",
+        "Regions":  "UK South:Offline,France Central:Succeeded"
+    },
+    {
+        "T":  1793270850990,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270859226,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270867086,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270874769,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270882401,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270890360,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270898349,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270905960,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270914354,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270922153,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270929560,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270936914,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270944552,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270952321,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270959637,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270967143,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    },
+    {
+        "T":  1793270975111,
+        "WriteRegion":  "France Central",
+        "Regions":  "France Central:Succeeded,UK South:Offline"
+    }
+]

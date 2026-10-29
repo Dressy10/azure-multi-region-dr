@@ -1,0 +1,39 @@
+{
+    "run":  "20261029-110356",
+    "writer":  "sdk",
+    "scenario":  "planned",
+    "aborted":  null,
+    "limits":  "planned failover is not an unplanned outage; offlineRegion simulates an outage via API; one run; a naive REST client lags an SDK client",
+    "writes_attempted":  790,
+    "writes_acknowledged":  790,
+    "documents_stored":  790,
+    "acknowledged_but_missing":  0,
+    "missing_seqs_sample":  "",
+    "stored_with_no_log_row":  0,
+    "stored_despite_client_error":  0,
+    "first_event":  {
+                        "command_or_api_seconds":  71.7,
+                        "recovered_within_limit":  true,
+                        "failed_writes":  0,
+                        "write_outage_seconds_first_to_last_failure":  0,
+                        "longest_gap_between_acknowledged_writes_sec":  6,
+                        "slowest_acknowledged_write_ms":  5988,
+                        "failure_status_codes":  "",
+                        "failure_substatus":  "",
+                        "failure_detail_sample":  null
+                    },
+    "second_event":  {
+                         "command_or_api_seconds":  69.7,
+                         "recovered_within_limit":  true,
+                         "failed_writes":  0,
+                         "write_outage_seconds_first_to_last_failure":  0,
+                         "longest_gap_between_acknowledged_writes_sec":  7.1,
+                         "slowest_acknowledged_write_ms":  7083,
+                         "failure_status_codes":  "",
+                         "failure_substatus":  "",
+                         "failure_detail_sample":  null
+                     },
+    "corrections":  [
+                        "The first version of this script reported the same 7,083 ms stall for both events because the failover window ran 90 s into the failback. Values above are corrected from the raw log: the failover stall was one write of 5,988 ms (22.6 s after the failover command started) and the failback stall one write of 7,083 ms (21.0 s after the failback command started). The only other slow write was seq 1 (2,025 ms, connection and auth warm-up). Window overlap is now prevented in the script."
+                    ]
+}

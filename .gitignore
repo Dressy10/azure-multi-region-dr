@@ -7,3 +7,7 @@ tfplan
 !*.tfvars.example
 backend.hcl
 .claude/settings.local.json
+
+.venv/
+__pycache__/
+*.pyc

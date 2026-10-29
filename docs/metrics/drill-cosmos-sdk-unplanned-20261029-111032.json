@@ -1,0 +1,26 @@
+{
+    "run":  "20261029-111032",
+    "writer":  "sdk",
+    "scenario":  "unplanned",
+    "aborted":  "ERROR: BadRequest({\"code\":\"BadRequest\",\"message\":\"OnlineRegion capability not enabled for database account cosmos-drproj-76256c.\\r\\nActivityId: cc419ddf-a316-4bbd-9cac-c9edd9f6b9be, Microsoft.Azure.Documents.Common/2.14.0\"})",
+    "limits":  "planned failover is not an unplanned outage; offlineRegion simulates an outage via API; one run; a naive REST client lags an SDK client",
+    "writes_attempted":  221,
+    "writes_acknowledged":  221,
+    "documents_stored":  183,
+    "acknowledged_but_missing":  38,
+    "missing_seqs_sample":  "184,185,186,187,188,189,190,191,192,193",
+    "stored_with_no_log_row":  0,
+    "stored_despite_client_error":  0,
+    "first_event":  {
+                        "command_or_api_seconds":  4.7,
+                        "recovered_within_limit":  true,
+                        "failed_writes":  0,
+                        "write_outage_seconds_first_to_last_failure":  0,
+                        "longest_gap_between_acknowledged_writes_sec":  0.4,
+                        "slowest_acknowledged_write_ms":  350,
+                        "failure_status_codes":  "",
+                        "failure_substatus":  "",
+                        "failure_detail_sample":  null
+                    },
+    "second_event":  null
+}

@@ -28,6 +28,15 @@ az cosmosdb failover-priority-change -n cosmos-drproj-76256c -g rg-drproj-global
 - Record times, failed requests and any lost writes. Compare with `docs/drills/`.
 - Write a blameless postmortem for any real use.
 
+## 5. If a region is cut off from replication but still answering (the dangerous case)
+The simulated-outage drills (`docs/drills/2026-10-29-sdk-and-unplanned-drills.md`) showed a failure with no error:
+- Under **Session** consistency the cut-off region kept acknowledging writes that never reached the other region. 764 of 918 acknowledged writes were missing afterwards, and the SDK client never saw an error, even after the service had promoted the DR region.
+- Under **Strong** consistency nothing was lost, but no write succeeded for about 4.1 to 4.6 minutes.
+So: the project uses Strong (ADR 0005). Expect a write outage of a few minutes during a regional failure rather than silent loss. Do not read "the write succeeded" as "the write is safe" unless the account is on Strong.
+- After such an incident, compare the application's own record of acknowledged writes with what the surviving region holds before declaring the failover complete.
+- Check the former write region's conflicts feed once it is reachable again. Cosmos documents it as the place unreplicated writes can be recovered from. This was not tested here.
+
 ## Known gaps
-- Unplanned regional data loss (RPO) has not been measured. A planned failover is designed to lose nothing, and in the drill none of the 296 acknowledged writes was lost.
-- The drills simulated an application outage, not a whole-region failure.
+- RPO was measured only in simulated outages. Planned failover lost nothing (790 of 790 writes stored). A simulated outage under Session lost most writes after the cut; under Strong it lost none.
+- The drills simulated an application outage and a region cut off from replication, not a whole-region failure. A genuinely dead region could behave differently.
+- The service refused to bring a simulated-offline region back (`OnlineRegion capability not enabled`), so every unplanned-outage drill needs a fresh account: about 20 minutes to destroy, and 6 to 50 minutes to recreate in this subscription.

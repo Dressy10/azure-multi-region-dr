@@ -61,8 +61,8 @@ Hypothesis 3: confirmed for a planned failover. Hypothesis 4: **not** confirmed 
 ## Action items
 | # | Action | Status |
 |---|---|---|
-| 1 | Build the Phase 2 service on the Cosmos SDK with preferred regions and endpoint discovery, and repeat the data drill to measure how much of the 77 to 82 s an SDK removes | open |
-| 2 | Run a forced (unplanned) Cosmos failover to measure real RPO, if the service allows it on this subscription | open |
+| 1 | Build the Phase 2 service on the Cosmos SDK with preferred regions and endpoint discovery, and repeat the data drill to measure how much of the 77 to 82 s an SDK removes | done: the SDK removed the failures (0 failed writes, 6 to 7 s stalls). See `2026-10-29-sdk-and-unplanned-drills.md` |
+| 2 | Run a forced (unplanned) Cosmos failover to measure real RPO, if the service allows it on this subscription | done in simulation (`offlineRegion`): Session lost 764 of 918 acknowledged writes, Strong lost 0. See `2026-10-29-sdk-and-unplanned-drills.md` |
 | 3 | Repeat the traffic drill with a harder fault, such as blocking the primary's ingress network path, to be closer to a regional failure | open |
 | 4 | Decide whether to shorten the Front Door probe interval below 10 s to cut detection time, weighing probe traffic | open |
 | 5 | Remember that Front Door took about 18 minutes to start serving after creation, so it must exist before a disaster; it cannot be created during one | noted in ADR 0003 |

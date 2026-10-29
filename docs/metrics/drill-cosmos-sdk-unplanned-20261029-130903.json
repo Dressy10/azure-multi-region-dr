@@ -1,0 +1,31 @@
+{
+    "run":  "20261029-130903",
+    "writer":  "sdk",
+    "scenario":  "unplanned",
+    "aborted":  null,
+    "limits":  "planned failover is not an unplanned outage; offlineRegion simulates an outage via API; one run; a naive REST client lags an SDK client",
+    "writes_attempted":  918,
+    "writes_acknowledged":  918,
+    "documents_stored":  154,
+    "acknowledged_but_missing":  764,
+    "missing_seqs_sample":  "155,156,157,158,159,160,161,162,163,164",
+    "lost_write_window_seconds":  164.4,
+    "seconds_api_call_to_write_region_switch":  43.3,
+    "consistency_level":  "Session",
+    "stored_with_no_log_row":  0,
+    "stored_despite_client_error":  0,
+    "first_event":  {
+                        "command_or_api_seconds":  5.1,
+                        "recovered_within_limit":  true,
+                        "failed_writes":  0,
+                        "write_outage_seconds_first_to_last_failure":  0,
+                        "longest_gap_between_acknowledged_writes_sec":  0.5,
+                        "slowest_acknowledged_write_ms":  505,
+                        "slowest_write_of_any_outcome_ms":  505,
+                        "writes_slower_than_10s":  0,
+                        "failure_status_codes":  "",
+                        "failure_substatus":  "",
+                        "failure_detail_sample":  null
+                    },
+    "second_event":  null
+}

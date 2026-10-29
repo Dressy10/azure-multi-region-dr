@@ -39,6 +39,15 @@ variable "cosmos_throughput" {
   type        = number
   default     = 400
 }
+variable "cosmos_consistency" {
+  description = "Strong refuses writes it cannot replicate (measured: 0 acknowledged writes lost, but a write outage of about 4.5 minutes in a simulated regional outage). Session kept acknowledging writes and lost 764 of 918. See ADR 0005 and docs/drills/."
+  type        = string
+  default     = "Strong"
+  validation {
+    condition     = contains(["Eventual", "ConsistentPrefix", "Session", "BoundedStaleness", "Strong"], var.cosmos_consistency)
+    error_message = "Must be a valid Cosmos DB consistency level."
+  }
+}
 variable "tags" {
   type = map(string)
   default = {
@@ -168,7 +177,7 @@ resource "azurerm_cosmosdb_account" "main" {
   # Session consistency: monotonic reads and read-your-writes for a client, with asynchronous
   # cross-region replication. The RPO this implies is measured in the Phase 3 drills, not assumed.
   consistency_policy {
-    consistency_level = "Session"
+    consistency_level = var.cosmos_consistency
   }
 
   geo_location {

@@ -1,0 +1,29 @@
+{
+    "run":  "20261029-114413",
+    "writer":  "sdk",
+    "scenario":  "unplanned",
+    "aborted":  null,
+    "limits":  "planned failover is not an unplanned outage; offlineRegion simulates an outage via API; one run; a naive REST client lags an SDK client",
+    "writes_attempted":  163,
+    "writes_acknowledged":  162,
+    "documents_stored":  162,
+    "acknowledged_but_missing":  0,
+    "missing_seqs_sample":  "",
+    "lost_write_window_seconds":  0,
+    "seconds_api_call_to_write_region_switch":  40.4,
+    "consistency_level":  "Strong",
+    "stored_with_no_log_row":  0,
+    "stored_despite_client_error":  0,
+    "first_event":  {
+                        "command_or_api_seconds":  5.4,
+                        "recovered_within_limit":  true,
+                        "failed_writes":  1,
+                        "write_outage_seconds_first_to_last_failure":  0.2,
+                        "longest_gap_between_acknowledged_writes_sec":  0.6,
+                        "slowest_acknowledged_write_ms":  645,
+                        "failure_status_codes":  "503 x1",
+                        "failure_substatus":  "\u002721006\u0027 x1",
+                        "failure_detail_sample":  "(ServiceUnavailable) Service is currently unavailable. More info: https://aka.ms/cosmosdb-tsg-service-unavaila"
+                    },
+    "second_event":  null
+}
