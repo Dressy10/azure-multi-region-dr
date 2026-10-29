@@ -24,3 +24,4 @@ It replicates across regions as a platform feature, supports automatic and manua
 ## Consequences
 - Front Door's origin probes hit the DR origin too, so the DR Container App does not truly scale to zero while the stack is up. Idle compute is small but not zero, and this will be reported honestly in the cost measurement.
 - Front Door adds a per-hour base cost while the stack exists, so the drill runtime should be kept short.
+- A new Front Door endpoint is not usable straight away. In the verified run the default endpoint returned the edge's generic 404 for about 18 minutes after the apply finished, then flapped between 404 and 200 for a short window, then served every request. Any plan that recreates the stack must budget for this. It makes a Front Door endpoint a poor candidate for being created during an incident: it has to exist before the disaster.

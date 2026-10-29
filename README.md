@@ -7,7 +7,7 @@ A warm-standby DR design across two Azure regions that is **fully created by `te
 | Phase | Scope | State |
 |---|---|---|
 | 0 | Repo, design, ADRs, bootstrap (state + OIDC identities), CI checks | done and applied, except the approval gate (see note) |
-| 1 | Two-region stack: Cosmos DB, Container Apps, Front Door, monitoring | applied twice, blocked: Cosmos DB multi-region capacity refused in UK West and North Europe (see ADR 0004). Stack destroyed; data layer decision open |
+| 1 | Two-region stack: Cosmos DB, Container Apps, Front Door, monitoring | done and verified once (UK South primary, France Central DR; UK West and North Europe were refused, see ADR 0004) |
 | 2 | Sample payments-style service that writes through the stack | not started |
 | 3 | Automated failover and failback drills with measured RPO and RTO | not started |
 | 4 | Cost proof: priced run, idle cost, destroy/recreate timings, runbooks, postmortem | not started |
@@ -23,7 +23,7 @@ No results are claimed yet. Every number below is a target or an estimate, and w
                    |
           Azure Front Door (priority routing, health probes)
               /                         \
-   UK South (primary)             North Europe (DR, warm standby)
+   UK South (primary)             France Central (DR, warm standby)
    Container Apps (min 1)         Container Apps (min 0, kept warm by probes)
           \                         /
         Cosmos DB, two regions, automatic failover
@@ -31,7 +31,7 @@ No results are claimed yet. Every number below is a target or an estimate, and w
         Log Analytics, daily ingestion cap
 ```
 
-- **Regions:** UK South (primary). The DR region is currently undecided. UK West (UK South's Azure pair) was the first choice and North Europe the second, and Cosmos DB refused to add either to my subscription for lack of granted capacity (ADR 0004). The Terraform default is North Europe, but it will not apply until the data layer is resolved. It is also outside the allowed-regions list of my landing-zone policy (audit-only).
+- **Regions:** UK South (primary) and France Central (DR, Paris). UK West (UK South's Azure pair) was the first choice, but Cosmos DB refused UK West, North Europe and West Europe for my subscription for lack of granted capacity. France Central was picked by probing real capacity in six regions, not from an availability list (ADR 0004). It is not an Azure paired region, and it is outside the allowed-regions list of my landing-zone policy (audit-only), so it shows as non-compliant until that list is updated.
 - **Traffic:** Azure Front Door Standard with priority routing and HTTP health probes. Failover is at connection level, so measured RTO depends mainly on probe settings.
 - **Compute:** Container Apps in both regions. The primary keeps one replica; the DR app is configured to scale to zero but Front Door's health probes keep it warm, so its idle cost is small, not zero.
 - **Data:** one Cosmos DB account replicated to both regions with automatic failover. Failover is service-managed and can be triggered on demand for drills.
@@ -62,6 +62,19 @@ These are my own estimates from list prices, not billed amounts, and must be che
 | Log Analytics (capped) | 0 | cents |
 
 If left running all month the stack would cost on the order of $85 (about $0.12 per hour). A two-hour drill should cost well under $1. The project will report the real figure from the bill.
+
+## Measured so far (one run each, so indicative only)
+
+| What | Result |
+|---|---|
+| `terraform apply` of the whole two-region stack (18 resources) | 493 s |
+| Front Door serving requests after the apply finished | about 18 minutes (404 from the edge until the config rolled out; flapped between 404 and 200 for a short window, then 40 of 40 requests returned 200) |
+| Cosmos DB | UK South (priority 0) and France Central (priority 1), automatic failover on, Entra ID auth only |
+| Both origins | `/healthz` 200 and `/version` reports its own region |
+| Via Front Door | `/version` returns `primary-uksouth` on every request (40 of 40 checked) |
+| Destroy and verify | 74 s for a stack that was already deleted; a full destroy has not been timed yet |
+
+So the stack is created in about 8 minutes but is not reachable through Front Door for roughly 18 more. A recreate from nothing takes about 26 minutes before traffic flows.
 
 ## Targets (not yet measured)
 

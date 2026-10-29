@@ -2,7 +2,7 @@
 # `terraform apply`. State lives in the bootstrap storage account (key stack.tfstate), never here.
 #
 #   Front Door (global) -> priority 1: UK South Container App   (primary)
-#                       -> priority 2: North Europe Container App (DR, warm standby)
+#                       -> priority 2: France Central Container App (DR, warm standby)
 #   Cosmos DB account replicated to both regions with automatic failover.
 
 terraform {
@@ -25,9 +25,9 @@ variable "primary_location" {
   default = "uksouth"
 }
 variable "dr_location" {
-  description = "DR region. UK West was the first choice but Cosmos DB capacity there is not granted to this subscription (see ADR 0004)."
+  description = "DR region. Chosen by probing real Cosmos DB capacity: UK West, North Europe and West Europe were refused for this subscription; France Central was accepted (see ADR 0004)."
   type        = string
-  default     = "northeurope"
+  default     = "francecentral"
 }
 variable "app_image" {
   description = "Stand-in workload for Phase 1: a public, signed image with /healthz and /version. Phase 2 replaces it with a DR-aware service."

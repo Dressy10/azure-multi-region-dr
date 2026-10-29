@@ -42,3 +42,22 @@ What was still proven before the stack was destroyed:
 Open decisions: request Cosmos region access (https://aka.ms/cosmosdbquota), use a data tier that does not need that grant, or prove compute and traffic failover first with the data layer simulated.
 
 Process lesson: an interrupted `terraform apply` kept replacing resources after the stack was deleted by hand, recreating the DR resource group in North Europe. Never delete resources out from under a running apply without stopping it first, and always re-verify afterwards.
+
+## Resolution: capacity probe, then France Central
+Instead of guessing a third region, six regions were probed by creating an empty Cosmos DB account in each (no throughput, so no cost) and recording whether Azure accepted it. UK West and North Europe were included as controls, since both were already known to be refused.
+
+| Region | Result |
+|---|---|
+| UK West | refused (control, as expected) |
+| North Europe | refused (control, as expected) |
+| West Europe | refused |
+| France Central | accepted |
+| Germany West Central | accepted |
+| Sweden Central | accepted |
+
+The controls failed as predicted, which is what makes the other results believable: the probe measures the same limit as the real multi-region apply. A probe account is a single-region creation, so it is a good but not perfect proxy for adding a replica region; the real apply is the final test.
+
+Decision: **France Central (Paris)**, the closest accepted region to UK South. Container Apps lists it as available. It is not an Azure paired region, and data now replicates to France (inside the EU, outside the UK), which needs a data-protection decision for any real UK-regulated workload. Germany West Central and Sweden Central are the fallbacks.
+
+## Update: the Front Door 404 was slow propagation after all
+The earlier note that the 404 "was not propagation" was wrong. On the France Central stack the same symptom appeared and then cleared by itself about 18 minutes after the apply finished: the edge's 404 for this endpoint was byte-identical to its 404 for a hostname it has never heard of (same 266,389-byte page), which fits "this edge node does not have the config yet", and over about 20 seconds requests flipped from 404 to 200 and then stayed at 200 (40 of 40). The first stack was destroyed after roughly 25 minutes, which probably just was not long enough. `deploymentStatus: NotStarted` stayed on the route and endpoint throughout, including while the endpoint was serving, so that field is not a reliable readiness signal and should not be used to gate anything.
