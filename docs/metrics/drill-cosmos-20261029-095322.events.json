@@ -1,0 +1,16 @@
+[
+    {
+        "Label":  "failover to DR",
+        "StartMs":  1793264037893,
+        "EndMs":  1793264109042,
+        "Recovered":  true,
+        "LastFailMs":  1793264137288
+    },
+    {
+        "Label":  "failback to primary",
+        "StartMs":  1793264154883,
+        "EndMs":  1793264225239,
+        "Recovered":  true,
+        "LastFailMs":  1793264258024
+    }
+]

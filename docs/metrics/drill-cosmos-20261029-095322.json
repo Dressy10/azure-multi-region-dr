@@ -1,0 +1,38 @@
+{
+    "run":  "20261029-095322",
+    "method":  "REST writer ~5 writes/s with Entra auth, no SDK region discovery; planned failover and failback; recovery = 15 s with no failed writes; read-back of every stored doc for the run",
+    "limits":  "planned (graceful) failover is not an unplanned regional outage; a naive REST client is slower to follow a write-region change than the official SDKs",
+    "writes_attempted":  495,
+    "writes_acknowledged":  296,
+    "documents_stored":  298,
+    "acknowledged_but_missing":  0,
+    "stored_but_not_acked":  2,
+    "missing_seqs_sample":  "",
+    "failover_to_dr":  {
+                           "command_seconds":  71.1,
+                           "recovered_within_limit":  true,
+                           "failed_writes":  99,
+                           "seconds_command_start_to_first_failure":  22.3,
+                           "seconds_command_start_to_last_failure":  99.4,
+                           "write_outage_seconds_first_to_last_failure":  77.3,
+                           "failure_status_codes":  "403 x99",
+                           "failure_substatus":  "\u00273\u0027 x99",
+                           "failure_detail_sample":  "{ code : Forbidden   message : Message: {\\ Errors\\ :[\\ The requested operation cannot be performed at this reg"
+                       },
+    "failback_to_primary":  {
+                                "command_seconds":  70.4,
+                                "recovered_within_limit":  true,
+                                "failed_writes":  100,
+                                "seconds_command_start_to_first_failure":  21.1,
+                                "seconds_command_start_to_last_failure":  103.1,
+                                "write_outage_seconds_first_to_last_failure":  82.2,
+                                "failure_status_codes":  "403 x100",
+                                "failure_substatus":  "\u00273\u0027 x100",
+                                "failure_detail_sample":  "{ code : Forbidden   message : Message: {\\ Errors\\ :[\\ The requested operation cannot be performed at this reg"
+                            },
+    "notes":  [
+                  "stored_but_not_acked = 2 (seq 449 and 479) are log-row losses, not real discrepancies: those two seqs have no row in the CSV at all, because the writer\u0027s append collided with the orchestrator reading the file. 296 acknowledged + 2 unlogged = 298 stored, and none of the 199 writes the client saw rejected (403, substatus 3) was stored.",
+                  "Failure windows: command start to first failure about 22 s, and the last failure came about 28-32 s AFTER the failover command had returned, so a client without SDK region discovery lags the service-side failover.",
+                  "Run 1 of this drill (drill-cosmos-20261029-094422.csv) died at the read-back step (query content-type bug, since fixed) but its raw log shows the same pattern: 403 windows of about 81 s and then a failback window that had not recovered when the writer was stopped."
+              ]
+}

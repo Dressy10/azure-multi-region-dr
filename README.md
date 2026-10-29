@@ -9,7 +9,7 @@ A warm-standby DR design across two Azure regions that is **fully created by `te
 | 0 | Repo, design, ADRs, bootstrap (state + OIDC identities), CI checks | done and applied, except the approval gate (see note) |
 | 1 | Two-region stack: Cosmos DB, Container Apps, Front Door, monitoring | done and verified once (UK South primary, France Central DR; UK West and North Europe were refused, see ADR 0004) |
 | 2 | Sample payments-style service that writes through the stack | not started |
-| 3 | Automated failover and failback drills with measured RPO and RTO | not started |
+| 3 | Automated failover and failback drills with measured RPO and RTO | done once for traffic and data (planned failover only); unplanned RPO not measured. See `docs/drills/` |
 | 4 | Cost proof: priced run, idle cost, destroy/recreate timings, runbooks, postmortem | not started |
 
 Approval gate: the `apply` identity is trusted only for a GitHub environment called `production`, which should require a manual reviewer. GitHub does not allow required reviewers on private repositories on the current plan, so that gate is not in place yet. Nothing uses the `apply` identity until a deploy workflow exists, and the gate must be in place before one does (either by making the repo public, where reviewers are free, or by upgrading the plan).
@@ -72,23 +72,30 @@ If left running all month the stack would cost on the order of $85 (about $0.12 
 | Cosmos DB | UK South (priority 0) and France Central (priority 1), automatic failover on, Entra ID auth only |
 | Both origins | `/healthz` 200 and `/version` reports its own region |
 | Via Front Door | `/version` returns `primary-uksouth` on every request (40 of 40 checked) |
+| Traffic failover (primary app taken offline) | about 20 s from first failed request to the DR region answering; 39 failed requests (404) in that window |
+| Traffic failback | 45.8 s after the primary came back, zero failed requests |
+| Cosmos planned failover, data written continuously | 296 acknowledged writes, 0 lost, 0 of the 199 rejected writes stored |
+| Cosmos write outage for a client without SDK region discovery | about 77 s (failover) and 82 s (failback), HTTP 403 sub-status 3; failover command itself about 70 s |
 | Destroy and verify | 74 s for a stack that was already deleted; a full destroy has not been timed yet |
 
 So the stack is created in about 8 minutes but is not reachable through Front Door for roughly 18 more. A recreate from nothing takes about 26 minutes before traffic flows.
 
-## Targets (not yet measured)
+## Targets against what was measured
 
-| Objective | Target |
-|---|---|
-| RTO (regional failure to traffic served from DR) | 5 minutes or less |
-| RPO (data loss at failover) | under 1 minute for acknowledged writes |
-| Recreate from nothing | to be measured |
+| Objective | Target | Measured so far |
+|---|---|---|
+| RTO, traffic (failure to traffic served from DR) | 5 minutes or less | about 20 s for a simulated application outage in the primary region (not a whole-region failure) |
+| RTO, data writes | 5 minutes or less | about 77 to 82 s of failed writes for a naive client; expected lower with the official SDK, not yet measured |
+| RPO | under 1 minute for acknowledged writes | zero acknowledged writes lost in a PLANNED failover; unplanned regional RPO not measured |
+| Recreate from nothing | to be measured | about 8 min to apply, then about 18 min before Front Door serves (about 26 min) |
 
 ## Layout
 
 - `infra/bootstrap/`: state storage and OIDC identities, applied once by hand
 - `infra/stack/`: the disposable two-region stack
 - `scripts/up.ps1`, `scripts/down.ps1`: create the stack and time it; destroy it and verify it is gone
+- `scripts/drill-traffic.ps1`, `scripts/drill-cosmos.ps1`: the failover drills, with client-side measurement
+- `docs/drills/`, `docs/runbooks/`, `docs/metrics/`: drill write-ups, the failover runbook, and raw logs
 - `docs/adr/`: architecture decision records
 
 ## Bootstrap

@@ -1,0 +1,14 @@
+{
+    "run":  "20261029-094009",
+    "method":  "client probe every ~500 ms through Front Door; fault = primary revision deactivated (app down, region up)",
+    "probe_requests_total":  327,
+    "seconds_fault_to_first_failure":  0.2,
+    "seconds_fault_to_first_dr_answer":  19.3,
+    "seconds_fault_to_stable_dr":  19.3,
+    "failed_requests_during_failover":  37,
+    "seconds_of_failure_first_to_last":  19,
+    "failure_status_codes":  "404 x37",
+    "seconds_restore_to_stable_primary":  45.8,
+    "failed_requests_during_failback":  0,
+    "failback_status_codes":  ""
+}
