@@ -80,6 +80,8 @@ If left running all month the stack would cost on the order of $85 (about $0.12 
 | Simulated unplanned outage, Session consistency | all writes acknowledged, **764 of 918 missing from the surviving region**; write region switched after 43 s but the client kept writing to the cut-off region |
 | Simulated unplanned outage, Strong consistency | 0 acknowledged writes lost, but writes blocked for about 4.1 to 4.6 min (two writes hung 123 s each and failed with 503) |
 | Chosen consistency | Strong (ADR 0005), caveats recorded there |
+| Cosmos-only data layer, create | 358 s, 409 s and 3,001 s across three builds: the same Terraform took from 6 to 50 minutes, so creation time is not predictable here |
+| Cosmos-only data layer, destroy | 1,115 to 1,396 s (about 19 to 23 min) across four teardowns, each verified |
 | Full destroy and verify | 2,186 s (about 36 min) for all 18 resources, then every stack resource group confirmed gone. Destroy is much slower than create (8 min), so cost savings depend on starting teardown promptly |
 
 So the stack is created in about 8 minutes but is not reachable through Front Door for roughly 18 more. A recreate from nothing takes about 26 minutes before traffic flows.
