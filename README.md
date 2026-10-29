@@ -76,7 +76,7 @@ If left running all month the stack would cost on the order of $85 (about $0.12 
 | Traffic failback | 45.8 s after the primary came back, zero failed requests |
 | Cosmos planned failover, data written continuously | 296 acknowledged writes, 0 lost, 0 of the 199 rejected writes stored |
 | Cosmos write outage for a client without SDK region discovery | about 77 s (failover) and 82 s (failback), HTTP 403 sub-status 3; failover command itself about 70 s |
-| Destroy and verify | 74 s for a stack that was already deleted; a full destroy has not been timed yet |
+| Full destroy and verify | 2,186 s (about 36 min) for all 18 resources, then every stack resource group confirmed gone. Destroy is much slower than create (8 min), so cost savings depend on starting teardown promptly |
 
 So the stack is created in about 8 minutes but is not reachable through Front Door for roughly 18 more. A recreate from nothing takes about 26 minutes before traffic flows.
 
